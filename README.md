@@ -9,8 +9,8 @@ python -m task_cli add "Buy milk"                    # add a task (default prior
 python -m task_cli add "Urgent thing" --priority high  # add with priority: high, medium, or low
 python -m task_cli list                              # list all tasks
 python -m task_cli list --priority high              # filter by priority
-python -m task_cli done <id>                         # mark a task done
-python -m task_cli delete <id>                       # delete a task
+python -m task_cli done 1                            # mark task #1 as done
+python -m task_cli delete 1                          # delete task #1
 ```
 
 ## Setup
