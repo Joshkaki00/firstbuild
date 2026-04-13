@@ -50,6 +50,7 @@ pytest --cov=src --cov-report=term-missing          # with coverage
 - Each feature must have tests before any implementation lands.
 - Keep tests isolated — use `tmp_path` fixtures and `TASK_CLI_FILE` env var, never touch real files.
 - Coverage note: `cli.py` and `__main__.py` show 0% in `--cov` reports because CLI tests run via subprocess. `store.py` and `tasks.py` should stay at 100%.
+- New features get companion test files per layer (e.g., `test_tasks_priority.py`, `test_store_priority.py`, `test_cli_priority.py`), not additions to the core test files.
 
 ## Architecture
 
@@ -65,7 +66,8 @@ Each `cmd_*` function in `cli.py` follows the same pattern: load → mutate → 
 
 - `status`: `"todo"` or `"done"`
 - `priority`: `"high"`, `"medium"`, or `"low"` (validated in `tasks.py` against `VALID_PRIORITIES`)
-- IDs are auto-incremented integers (`max existing id + 1`)
+- IDs are auto-incremented integers (`max existing id + 1`); deleted IDs are never reused
+- `priority` was added after initial release — `cmd_list` uses `.get('priority', 'medium')` to handle older tasks that lack the field
 
 ## Conventions
 
