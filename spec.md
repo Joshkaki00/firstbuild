@@ -35,7 +35,7 @@ python -m task_cli list
 **Success criteria:**
 - Exit code 0 for all commands.
 - After `done 1`, `list` shows the task with status `done`.
-- Running `done <nonexistent-id>` exits with code 1 and prints an error.
+- Running `done 999` (nonexistent ID) exits with code 1 and prints an error.
 
 ---
 
@@ -51,7 +51,7 @@ python -m task_cli list
 **Success criteria:**
 - Exit code 0 for all commands.
 - After `delete 1`, `list` no longer shows the task.
-- Running `delete <nonexistent-id>` exits with code 1 and prints an error.
+- Running `delete 999` (nonexistent ID) exits with code 1 and prints an error.
 
 ---
 
