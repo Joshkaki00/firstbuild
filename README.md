@@ -5,16 +5,19 @@ A minimal command-line task tracker. Tasks are stored in a local JSON file.
 ## Usage
 
 ```bash
-python -m task_cli add "Buy milk"      # add a task
-python -m task_cli list                 # list all tasks
-python -m task_cli done <id>            # mark a task done
-python -m task_cli delete <id>          # delete a task
+python -m task_cli add "Buy milk"                    # add a task (default priority: medium)
+python -m task_cli add "Urgent thing" --priority high  # add with priority: high, medium, or low
+python -m task_cli list                              # list all tasks
+python -m task_cli list --priority high              # filter by priority
+python -m task_cli done <id>                         # mark a task done
+python -m task_cli delete <id>                       # delete a task
 ```
 
 ## Setup
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
+pip install -e .
 pip install pytest pytest-cov
 ```
 
