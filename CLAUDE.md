@@ -46,6 +46,12 @@ pytest tests/test_cli.py::test_add_task             # run a single test
 pytest --cov=src --cov-report=term-missing          # with coverage
 ```
 
+Custom slash commands are available for the common workflows:
+
+- `/test` — run the full suite with coverage and report pass/fail
+- `/tdd <feature>` — scaffold a red/green/refactor cycle for a new feature
+- `/qg` — run all three quality gates from `spec.md` against a temp file
+
 - Write the failing test first. Commit it. Then implement.
 - Each feature must have tests before any implementation lands.
 - Keep tests isolated — use `tmp_path` fixtures and `TASK_CLI_FILE` env var, never touch real files.
