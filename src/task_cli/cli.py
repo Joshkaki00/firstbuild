@@ -16,20 +16,29 @@ def _task_file() -> Path:
 def cmd_add(args: argparse.Namespace) -> int:
     path = _task_file()
     task_list = store.load(path)
-    task = tasks.add(task_list, args.description)
+    try:
+        task = tasks.add(task_list, args.description, priority=args.priority)
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
     store.save(path, task_list)
-    print(f"Added task #{task['id']}: {task['description']}")
+    print(f"Added task #{task['id']} [{task['priority']}]: {task['description']}")
     return 0
 
 
 def cmd_list(args: argparse.Namespace) -> int:
     path = _task_file()
     task_list = store.load(path)
-    if not task_list:
+    try:
+        visible = tasks.list_by_priority(task_list, args.priority)
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+    if not visible:
         print("No tasks yet. Use 'add' to create one.")
         return 0
-    for task in tasks.list_all(task_list):
-        print(f"[{task['status']}] #{task['id']}  {task['description']}")
+    for task in visible:
+        print(f"[{task['status']}] #{task['id']}  ({task.get('priority', 'medium')})  {task['description']}")
     return 0
 
 
@@ -65,9 +74,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_add = sub.add_parser("add", help="Add a new task")
     p_add.add_argument("description", help="Task description")
+    p_add.add_argument("--priority", default="medium", choices=["high", "medium", "low"], help="Task priority")
     p_add.set_defaults(func=cmd_add)
 
     p_list = sub.add_parser("list", help="List all tasks")
+    p_list.add_argument("--priority", default=None, choices=["high", "medium", "low"], help="Filter by priority")
     p_list.set_defaults(func=cmd_list)
 
     p_done = sub.add_parser("done", help="Mark a task as done")
