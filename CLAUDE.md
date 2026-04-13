@@ -25,6 +25,7 @@ pip install pytest pytest-cov
 ```bash
 python -m task_cli add "Buy milk"
 python -m task_cli add "Buy milk" --priority high   # priorities: high, medium (default), low
+python -m task_cli add "File taxes" --due 2026-04-20  # optional due date, YYYY-MM-DD
 python -m task_cli list
 python -m task_cli list --priority high             # filter by priority
 python -m task_cli done 1
@@ -67,11 +68,12 @@ Each `cmd_*` function in `cli.py` follows the same pattern: load → mutate → 
 ### JSON task schema
 
 ```json
-{"id": 1, "description": "Buy milk", "status": "todo", "priority": "medium"}
+{"id": 1, "description": "Buy milk", "status": "todo", "priority": "medium", "due_date": "2026-04-20"}
 ```
 
 - `status`: `"todo"` or `"done"`
 - `priority`: `"high"`, `"medium"`, or `"low"` (validated in `tasks.py` against `VALID_PRIORITIES`)
+- `due_date`: ISO 8601 string (`"YYYY-MM-DD"`) or `null`; validated via `datetime.date.fromisoformat` in `tasks.py`
 - IDs are auto-incremented integers (`max existing id + 1`); deleted IDs are never reused
 - `priority` was added after initial release — `cmd_list` uses `.get('priority', 'medium')` to handle older tasks that lack the field
 
