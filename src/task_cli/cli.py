@@ -17,7 +17,7 @@ def cmd_add(args: argparse.Namespace) -> int:
     path = _task_file()
     task_list = store.load(path)
     try:
-        task = tasks.add(task_list, args.description, priority=args.priority)
+        task = tasks.add(task_list, args.description, priority=args.priority, due_date=args.due)
     except ValueError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
@@ -38,7 +38,9 @@ def cmd_list(args: argparse.Namespace) -> int:
         print("No tasks yet. Use 'add' to create one.")
         return 0
     for task in visible:
-        print(f"[{task['status']}] #{task['id']}  ({task.get('priority', 'medium')})  {task['description']}")
+        due = task.get("due_date")
+        due_str = f"  due:{due}" if due else ""
+        print(f"[{task['status']}] #{task['id']}  ({task.get('priority', 'medium')})  {task['description']}{due_str}")
     return 0
 
 
@@ -75,6 +77,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_add = sub.add_parser("add", help="Add a new task")
     p_add.add_argument("description", help="Task description")
     p_add.add_argument("--priority", default="medium", choices=["high", "medium", "low"], help="Task priority")
+    p_add.add_argument("--due", default=None, metavar="YYYY-MM-DD", help="Due date (YYYY-MM-DD)")
     p_add.set_defaults(func=cmd_add)
 
     p_list = sub.add_parser("list", help="List all tasks")
