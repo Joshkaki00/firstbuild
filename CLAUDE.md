@@ -16,6 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
+pip install -e .
 pip install pytest pytest-cov
 ```
 
@@ -26,8 +27,8 @@ python -m task_cli add "Buy milk"
 python -m task_cli add "Buy milk" --priority high   # priorities: high, medium (default), low
 python -m task_cli list
 python -m task_cli list --priority high             # filter by priority
-python -m task_cli done <id>
-python -m task_cli delete <id>
+python -m task_cli done 1
+python -m task_cli delete 1
 ```
 
 Override the storage file (useful during development):
@@ -48,7 +49,7 @@ pytest --cov=src --cov-report=term-missing          # with coverage
 - Write the failing test first. Commit it. Then implement.
 - Each feature must have tests before any implementation lands.
 - Keep tests isolated — use `tmp_path` fixtures and `TASK_CLI_FILE` env var, never touch real files.
-- Target: 90%+ line coverage on `src/`.
+- Coverage note: `cli.py` and `__main__.py` show 0% in `--cov` reports because CLI tests run via subprocess. `store.py` and `tasks.py` should stay at 100%.
 
 ## Architecture
 
