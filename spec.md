@@ -61,23 +61,28 @@ python -m task_cli list
 - **Given** the CLI is installed and no tasks exist
 - **When** I run `python -m task_cli add "Buy milk"`
 - **Then** the task is saved with a unique integer ID, status `todo`, and the description "Buy milk"; exit code is 0
+- **Tests:** `test_cli.py::test_add_exits_zero`, `test_cli.py::test_add_prints_confirmation`, `test_tasks.py::test_add_task_returns_task_with_id`
 
 ### AC-2: List tasks shows all items
 - **Given** two tasks have been added
 - **When** I run `python -m task_cli list`
 - **Then** both tasks appear with their IDs, statuses, and descriptions; exit code is 0
+- **Tests:** `test_cli.py::test_list_exits_zero_with_no_tasks`, `test_cli.py::test_list_shows_added_task`, `test_tasks.py::test_list_all_returns_all_tasks`
 
 ### AC-3: Marking a task done changes its status
 - **Given** a task with ID 1 exists and has status `todo`
 - **When** I run `python -m task_cli done 1`
 - **Then** the task's status changes to `done` and `list` reflects the update; exit code is 0
+- **Tests:** `test_cli.py::test_done_marks_task_complete`, `test_cli.py::test_list_shows_done_status`, `test_tasks.py::test_mark_done_changes_status`
 
 ### AC-4: Deleting a task removes it permanently
 - **Given** a task with ID 2 exists
 - **When** I run `python -m task_cli delete 2`
 - **Then** the task is no longer present in `list` output; exit code is 0
+- **Tests:** `test_cli.py::test_delete_removes_task`, `test_tasks.py::test_delete_removes_task`
 
 ### AC-5: Invalid ID produces a clear error
 - **Given** no task with ID 999 exists
 - **When** I run `python -m task_cli done 999` or `python -m task_cli delete 999`
 - **Then** an error message is printed to stderr and the exit code is 1
+- **Tests:** `test_cli.py::test_done_with_invalid_id_exits_nonzero`, `test_cli.py::test_delete_with_invalid_id_exits_nonzero`, `test_tasks.py::test_mark_done_raises_for_missing_id`, `test_tasks.py::test_delete_raises_for_missing_id`
