@@ -41,10 +41,10 @@ TASK_CLI_FILE=/tmp/my-tasks.json python -m task_cli list
 ## Testing
 
 ```bash
-pytest                                              # run all tests
-pytest tests/test_cli.py                            # run a single test file
-pytest tests/test_cli.py::test_add_task             # run a single test
-pytest --cov=src --cov-report=term-missing          # with coverage
+PYTHONPATH=src pytest                                              # run all tests
+PYTHONPATH=src pytest tests/test_cli.py                            # run a single test file
+PYTHONPATH=src pytest tests/test_cli.py::test_add_task             # run a single test
+PYTHONPATH=src pytest --cov=src --cov-report=term-missing          # with coverage
 ```
 
 Custom slash commands are available for the common workflows:
@@ -52,6 +52,7 @@ Custom slash commands are available for the common workflows:
 - `/test` — run the full suite with coverage and report pass/fail
 - `/tdd <feature>` — scaffold a red/green/refactor cycle for a new feature
 - `/qg` — run all three quality gates from `spec.md` against a temp file
+- `/verify` — full 4-step pipeline: import check → syntax check → tests → coverage gate
 
 - Write the failing test first. Commit it. Then implement.
 - Each feature must have tests before any implementation lands.
@@ -81,6 +82,7 @@ Each `cmd_*` function in `cli.py` follows the same pattern: load → mutate → 
 
 - Functions over classes where possible.
 - Errors surface as printed messages + non-zero exit codes, not exceptions.
+- New optional task fields must use `.get('field', default)` in `cmd_list` to stay backward-compatible with tasks written before the field existed (see `priority` and `due_date` as precedents).
 
 ## Hallucination Patterns (Gotcha Log)
 
