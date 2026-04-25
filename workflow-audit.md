@@ -52,6 +52,7 @@
 | Named agent lanes (domain/store/cli) | ✅ | V1.2 priority feature |
 | Hallucination gotcha log | ✅ | In CLAUDE.md |
 | Verification pipeline command | ✅ | `/verify` — 4 steps |
+| Context7 MCP | ✅ | Added in Part 3 — live doc verification |
 
 ### Features from the course not yet used
 
@@ -68,7 +69,6 @@
 | **`/project:onboard` command** | House Rules | No onboarding command created |
 | **Model selection** (Haiku / Sonnet / Opus) | Copilot ≠ Coworker | Default model used throughout |
 | **Parallel subagents via Task tool** | Thirteen Tiny Coworkers | Lanes were sequential, not truly parallel |
-| **MCP servers** | Give It Eyes and Ears | Not covered in firstbuild scope |
 
 ---
 
@@ -102,5 +102,66 @@ A PostToolUse hook runs `pytest tests/` after every Edit. The agent can't move t
 After all lanes merge: `claude "Create a PR for the priority feature. Reference issue #1."` The agent reads the diff across all three files, writes the PR description, and links the issue. Human reviews the PR, not the raw diff.
 
 **What would have been different:**
-- The "old tasks missing priority field" bug would have been caught by the spec, not discovered post-hoc in a test gap analysis.
+- The "old tasks missing priority field" edge case would have been caught by the spec, not discovered post-hoc in a test gap analysis.
 - The coverage report confusion (0% on `cli.py`) would have been in the spec upfront as a known limitation, not discovered mid-session.
+
+---
+
+## 4. Part 3 — Apply One New Technique: Context7 MCP
+
+### What I chose and why
+
+**Context7 MCP** — an MCP server by Upstash that fetches live, version-specific library documentation and injects it directly into the agent's context during a session.
+
+I chose this because it directly addresses the hallucination problem already documented in `CLAUDE.md`. Two of the four gotchas in the hallucination log (wrong build backend, `<placeholder>` shell syntax) came from the agent pattern-matching on stale training data instead of verifying against real docs. Context7 is the tooling solution to that problem.
+
+### What I did
+
+**Installation** — added Context7 scoped to the `firstbuild` project:
+
+```bash
+claude mcp add --scope project context7 -- npx -y @upstash/context7-mcp
+```
+
+This writes the MCP server config into `.claude/` so it loads automatically for this project without affecting other repos. No API key required for basic use; a free key from context7.com/dashboard unlocks higher rate limits.
+
+**Added a CLAUDE.md instruction** to trigger Context7 automatically on any library or API question:
+
+> When referencing any stdlib module, third-party package, or CLI tool behavior, use context7 to pull current documentation before generating code or examples.
+
+**Test query 1** — verified the exact call used in `tasks.py`:
+
+```
+Verify that datetime.date.fromisoformat accepts YYYY-MM-DD strings in Python 3.11
+and confirm the correct exception type for invalid input. use context7
+```
+
+Context7 fetched the official Python 3.11 `datetime` docs, confirmed `fromisoformat` raises `ValueError` on bad input, and noted it was added in Python 3.7 — validating the implementation already in `tasks.py`.
+
+**Test query 2** — checked `argparse` `choices` exit behavior (used for `--priority`):
+
+```
+Confirm that argparse choices validation raises SystemExit with code 2 on invalid input. use context7
+```
+
+Context7 confirmed: argparse prints to stderr and exits with code 2 for invalid choices — which is why `test_add_invalid_priority_exits_nonzero` passes (asserts `returncode != 0`, satisfied by exit code 2).
+
+**Test query 3** — the hallucination that actually hurt this project:
+
+```
+What is the correct build-backend value for setuptools in pyproject.toml? use context7
+```
+
+Context7 fetched current setuptools docs and returned `setuptools.build_meta` — exactly the fix that had to be made manually after the agent hallucinated `setuptools.backends.legacy:build`. With Context7 installed, that mistake would have been caught before `pip install -e .` failed.
+
+### What happened
+
+Context7 resolved all three queries by fetching doc chunks from official sources, version-pinned to the libraries actually in use. For the two confirmatory queries (datetime, argparse) the implementation was already correct — but "I verified this is right" is a stronger claim than "I think this is right." For the setuptools query, Context7 gave the exact answer that would have prevented a real bug.
+
+### Did it improve the workflow?
+
+**For firstbuild (stdlib only): moderately.** The implementation didn't change, but verification became tool-backed instead of memory-backed. The hallucination log now has a procedural answer: "run `use context7` before accepting any package config or API call the agent generates."
+
+**For future projects (third-party deps): significantly.** Every project that touches `requests`, `fastapi`, `sqlalchemy`, `pytest` plugins, or any rapidly-changing package benefits from live doc injection. Training data lags; Context7 doesn't.
+
+**Workflow change going forward:** Added `use context7` as a standard step in the `/verify` command's Step 1 (import check) — before accepting any new import or package config, Context7 confirms the API exists in the version being used. This closes the gap between "the agent is confident" and "the docs agree."
