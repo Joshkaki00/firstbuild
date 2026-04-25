@@ -178,3 +178,61 @@ Context7 resolved all three queries by fetching doc chunks from official sources
 **For future projects (third-party deps): significantly.** Every project that touches `requests`, `fastapi`, `sqlalchemy`, `pytest` plugins, or any rapidly-changing package benefits from live doc injection. Training data lags; Context7 doesn't.
 
 **Workflow change going forward:** Added `use context7` as a standard step in the `/verify` command's Step 1 (import check) — before accepting any new import or package config, Context7 confirms the API exists in the version being used. This closes the gap between "the agent is confident" and "the docs agree."
+
+---
+
+## 5. Custom Command + Hook
+
+### What was tedious
+
+Every new feature required manually creating three test file stubs (domain, store, CLI layer) with identical boilerplate: same import block, same `run()` helper, same file header comment. The priority and due date features both needed this, and it was pure copy-paste work.
+
+Before committing, there was also a 4-step mental checklist to remember: run tests, check syntax, verify CLAUDE.md line count, check store/tasks coverage. Missing any step meant discovering the problem later.
+
+### `/scaffold <feature>` — new custom command
+
+**File:** `.claude/commands/scaffold.md`
+
+Generates all three test stub files for a new feature in one command:
+
+```
+/scaffold tags
+```
+
+Creates:
+- `tests/test_tasks_tags.py` — domain layer stub with import and TODO
+- `tests/test_store_tags.py` — store roundtrip stub with pattern comment
+- `tests/test_cli_tags.py` — CLI layer stub with the full `run()` helper pre-filled
+
+Then confirms they collect 0 tests (stubs only — correct at red phase start) and hands off to `/tdd`.
+
+**What this eliminates:** The copy-paste setup tax before every feature's red phase. The `run()` helper alone is 10 lines that previously had to be manually duplicated into every CLI test file.
+
+### PostToolUse syntax-check hook
+
+**File:** `.claude/settings.json`
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -m py_compile \"$CLAUDE_TOOL_INPUT_PATH\" ..."
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+After every `Write` or `Edit` tool call, runs `py_compile` on the modified file. Prints `✓ syntax OK` or `✗ syntax error` immediately — before the agent moves to the next step.
+
+**What this eliminates:** The pattern of writing code across multiple files and only discovering a syntax error when `pytest` finally runs. With this hook, syntax errors surface at the file level, immediately after the edit, while the agent still has that file in focus.
+
+**Before the hook:** syntax errors discovered at `pytest` run time, sometimes several edits later.
+**After the hook:** syntax errors caught within one tool call of the mistake.
