@@ -46,6 +46,17 @@ TASK_CLI_FILE=/tmp/my-tasks.json python -m task_cli list
 {"id": 1, "description": "Buy milk", "status": "todo", "priority": "medium", "due_date": null}
 ```
 
+## Development
+
+This project was built with a test-first workflow using Claude Code. Key dev files:
+
+- `CLAUDE.md` — agent context: tech stack, architecture, conventions, gotcha log
+- `spec.md` — quality gates and acceptance criteria mapped to tests
+- `workflow-audit.md` — course audit, feature inventory, and new technique documentation
+- `.claude/commands/` — custom slash commands: `/test`, `/tdd`, `/qg`, `/verify`, `/scaffold`
+- `.claude/settings.json` — PostToolUse hook: syntax check after every file edit
+- `.mcp.json` — Context7 MCP for live documentation verification
+
 ## Completion
 
 Quiz: 8/8 correct (100%) on the Claude Code in Action final quiz.
