@@ -92,6 +92,7 @@ Patterns observed during this build where AI output needed verification or corre
 - **`<placeholder>` syntax in shell examples.** Agent wrote `done <id>` and `delete <id>` in README and CLAUDE.md. Angle brackets are shell redirect operators — zsh/bash interpret `<id>` as "read stdin from a file named id." Always use a real example value (e.g., `done 1`) in any runnable code block.
 - **Subprocess coverage gap not anticipated.** Agent wrote CLI tests using `subprocess.run` without flagging that pytest-cov won't instrument child processes. This causes `cli.py` and `__main__.py` to report 0% coverage despite being fully tested. If coverage completeness matters, prefer calling `cli.main()` directly in tests instead of spawning subprocesses.
 - **Unused import not caught.** `test_cli.py` imported `pytest` without using it. Linter would catch this; agent did not flag it during generation.
+- **`claude mcp list` doesn't show project-scoped servers.** Servers added with `--scope project` (stored in `.mcp.json`) are invisible to `claude mcp list`. Known display bug ([issue #5963](https://github.com/anthropics/claude-code/issues/5963)). Use `claude mcp get <name>` to verify a project server is connected, or `jq -r '.mcpServers | keys[]' .mcp.json` to list them directly.
 
 ## Quality Gates
 

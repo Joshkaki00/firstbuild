@@ -123,7 +123,20 @@ I chose this because it directly addresses the hallucination problem already doc
 claude mcp add --scope project context7 -- npx -y @upstash/context7-mcp
 ```
 
-This writes the MCP server config into `.claude/` so it loads automatically for this project without affecting other repos. No API key required for basic use; a free key from context7.com/dashboard unlocks higher rate limits.
+This writes the MCP server config into `.mcp.json` at the project root so it loads automatically for this project without affecting other repos. No API key required for basic use; a free key from context7.com/dashboard unlocks higher rate limits.
+
+Verified with:
+```
+$ claude mcp get context7
+context7:
+  Scope: Project config (shared via .mcp.json)
+  Status: ✓ Connected
+  Type: stdio
+  Command: npx
+  Args: -y @upstash/context7-mcp
+```
+
+Note: `claude mcp list` does not show project-scoped servers — known display bug ([issue #5963](https://github.com/anthropics/claude-code/issues/5963)). Use `claude mcp get <name>` or `jq -r '.mcpServers | keys[]' .mcp.json` to verify project servers are registered.
 
 **Added a CLAUDE.md instruction** to trigger Context7 automatically on any library or API question:
 
